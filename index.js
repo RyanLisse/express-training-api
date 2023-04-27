@@ -12,15 +12,6 @@ app.get("/", (req, res) => {
   res.send("Hello from Nerdbord!");
 });
 
-app.post("/trains", (req, res) => {
-  const createTrainPayload = req.body;
-  const trainsFilePath = path.join(__dirname, "data", "trains.json");
-  const trains = JSON.parse(fs.readFileSync(trainsFilePath));
-  trains.push(createTrainPayload);
-  fs.writeFileSync(trainsFilePath, JSON.stringify(trains));
-  res.send("Train added successfully");
-});
-
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
