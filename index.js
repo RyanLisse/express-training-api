@@ -7,6 +7,7 @@ const app = express();
 app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 4000;
+const trainFilePath = path.join(__dirname, "data", "trains.json");
 
 app.get("/", (req, res) => {
   res.send("Hello from Nerdbord!");
@@ -15,30 +16,46 @@ app.get("/", (req, res) => {
 app.post("/trains", (req, res) => {
   const createTrainPayload = req.body;
 
-  // Input validation
-  if (!createTrainPayload.trainExpressName ||
-      !createTrainPayload.countryOfOrigin ||
-      !createTrainPayload.yearOfConstruction ||
-      !createTrainPayload.maxKilometerPerHour ||
-      !createTrainPayload.destinationFrom ||
-      !createTrainPayload.destinationTo) {
-    res.status(400).send("Missing required fields");
+  const requiredFields = [
+    { field: "trainExpressName", label: "Train Express Name" },
+    { field: "countryOfOrigin", label: "Country of Origin" },
+    { field: "yearOfConstruction", label: "Year of Construction" },
+    { field: "maxKilometerPerHour", label: "Max Kilometer per Hour" },
+    { field: "destinationFrom", label: "Destination From" },
+    { field: "destinationTo", label: "Destination To" },
+  ];
+
+  const missingFields = requiredFields.filter(
+    (field) => !createTrainPayload[field.field]
+  );
+
+  if (missingFields.length > 0) {
+    const missingFieldNames = missingFields
+      .map((field) => field.label)
+      .join(", ");
+    res.status(400).send(`Missing required fields: ${missingFieldNames}`);
     return;
   }
 
-  if (isNaN(parseInt(createTrainPayload.yearOfConstruction)) ||
-      isNaN(parseInt(createTrainPayload.maxKilometerPerHour))) {
-    res.status(400).send("Invalid data types");
+  const numericFields = ["yearOfConstruction", "maxKilometerPerHour"];
+  const invalidFields = numericFields.filter((field) =>
+    isNaN(parseInt(createTrainPayload[field]))
+  );
+
+  if (invalidFields.length > 0) {
+    const invalidFieldNames = invalidFields
+      .map((field) => field.label)
+      .join(", ");
+    res.status(400).send(`Invalid data types for fields: ${invalidFieldNames}`);
     return;
   }
 
-  const trainFilePath = path.join(__dirname, "data", "trains.json");
   let trains;
   try {
     trains = JSON.parse(fs.readFileSync(trainFilePath));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error reading trains file");
+    res.status(500).send(`Error reading trains file: ${err.message}`);
     return;
   }
 
@@ -48,7 +65,7 @@ app.post("/trains", (req, res) => {
     fs.writeFileSync(trainFilePath, JSON.stringify(trains));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error writing to trains file");
+    res.status(500).send(`Error writing to trains file: ${err.message}`);
     return;
   }
 
@@ -56,13 +73,12 @@ app.post("/trains", (req, res) => {
 });
 
 app.get("/trains", (req, res) => {
-  const trainFilePath = path.join(__dirname, "data", "trains.json");
   let trains;
   try {
     trains = JSON.parse(fs.readFileSync(trainFilePath));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error reading trains file");
+    res.status(500).send(`Error reading trains file: ${err.message}`);
     return;
   }
 
@@ -73,50 +89,103 @@ app.put("/trains/:id", (req, res) => {
   const updatedTrainPayload = req.body;
   const trainId = req.params.id;
 
-  // Input validation
-  if (!updatedTrainPayload.trainExpressName ||
-      !updatedTrainPayload.countryOfOrigin ||
-      !updatedTrainPayload.yearOfConstruction ||
-      !updatedTrainPayload.maxKilometerPerHour ||
-      !updatedTrainPayload.destinationFrom ||
-      !updatedTrainPayload.destinationTo) {
-    res.status(400).send("Missing required fields");
+  const requiredFields = [
+    { field: "trainExpressName", label: "Train Express Name" },
+    { field: "countryOfOrigin", label: "Country of Origin" },
+    { field: "yearOfConstruction", label: "Year of Construction" },
+    { field: "maxKilometerPerHour", label: "Max Kilometer per Hour" },
+    { field: "destinationFrom", label: "Destination From" },
+    { field: "destinationTo", label: "Destination To" },
+  ];
+
+  const missingFields = requiredFields.filter(
+    (field) => !updatedTrainPayload[field.field]
+  );
+
+  if (missingFields.length > 0) {
+    const missingFieldNames = missingFields
+      .map((field) => field.label)
+      .join(", ");
+    res.status(400).send(`Missing required fields: ${missingFieldNames}`);
     return;
   }
 
-  if (isNaN(parseInt(updatedTrainPayload.yearOfConstruction)) ||
-      isNaN(parseInt(updatedTrainPayload.maxKilometerPerHour))) {
-    res.status(400).send("Invalid data types");
+  const numericFields = ["yearOfConstruction", "maxKilometerPerHour"];
+  const invalidFields = numericFields.filter((field) =>
+    isNaN(parseInt(updatedTrainPayload[field]))
+  );
+
+  if (invalidFields.length > 0) {
+    const invalidFieldNames = invalidFields
+      .map((field) => field.label)
+      .join(", ");
+    res.status(400).send(`Invalid data types for fields: ${invalidFieldNames}`);
     return;
   }
 
-  const trainFilePath = path.join(__dirname, "data", "trains.json");
   let trains;
   try {
     trains = JSON.parse(fs.readFileSync(trainFilePath));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error reading trains file");
+    res.status(500).send(`Error reading trains file: ${err.message}`);
     return;
   }
 
-  const existingTrainIndex = trains.findIndex(train => train.id === trainId);
+  const existingTrainIndex = trains.findIndex((train) => train.id === trainId);
   if (existingTrainIndex === -1) {
     res.status(404).send("Train not found");
     return;
   }
 
-  const updatedTrain = { ...trains[existingTrainIndex], ...updatedTrainPayload };
+  const updatedTrain = {
+    ...trains[existingTrainIndex],
+    ...updatedTrainPayload,
+  };
   trains[existingTrainIndex] = updatedTrain;
 
   try {
     fs.writeFileSync(trainFilePath, JSON.stringify(trains));
   } catch (err) {
     console.error(err);
-    res.status(500).send("Error writing to trains file");
+    res.status(500).send(`Error writing to trains file: ${err.message}`);
     return;
   }
 
-  res.send("Train updated successfully"); });
+  res.send("Train updated successfully");
+});
 
-app.listen(PORT, () => { console.log(Server listening on port ${PORT}); });
+app.delete("/trains/:id", (req, res) => {
+  const trainId = req.params.id;
+
+  let trains;
+  try {
+    trains = JSON.parse(fs.readFileSync(trainFilePath));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`Error reading trains file: ${err.message}`);
+    return;
+  }
+
+  const existingTrainIndex = trains.findIndex((train) => train.id === trainId);
+  if (existingTrainIndex === -1) {
+    res.status(404).send("Train not found");
+    return;
+  }
+
+  trains.splice(existingTrainIndex, 1);
+
+  try {
+    fs.writeFileSync(trainFilePath, JSON.stringify(trains));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(`Error writing to trains file: ${err.message}`);
+    return;
+  }
+
+  res.send("Train deleted successfully");
+});
+
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
