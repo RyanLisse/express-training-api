@@ -14,10 +14,10 @@ app.get("/", (req, res) => {
 
 app.post("/trains", (req, res) => {
   const createTrainPayload = req.body;
-  const trainsFilePath = path.join(__dirname, "data", "trains.json");
-  const trains = JSON.parse(fs.readFileSync(trainsFilePath));
+  const trainFilePath = path.join(__dirname, "data", "trains.json");
+  const trains = JSON.parse(fs.readFileSync(trainFilePath));
   trains.push(createTrainPayload);
-  fs.writeFileSync(trainsFilePath, JSON.stringify(trains));
+  fs.writeFileSync(trainFilePath, JSON.stringify(trains));
   res.send("Train added successfully");
 });
 
