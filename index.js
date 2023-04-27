@@ -8,10 +8,18 @@ app.use(bodyParser.json());
 
 const PORT = process.env.PORT || 4000;
 
-app.get("/", (req, res) => {
-  res.send("Hello from Nerdbord!");
+app.get("/trains", (req, res) => {
+  const trainFilePath = path.join(__dirname, "data", "trains.json");
+  let trains;
+  try {
+    trains = JSON.parse(fs.readFileSync(trainFilePath));
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error reading trains file");
+    return;
+  }
+  res.send(trains);
 });
-
 app.post("/trains", (req, res) => {
   const createTrainPayload = req.body;
 
