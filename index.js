@@ -120,3 +120,4 @@ app.put("/trains/:id", (req, res) => {
   res.send("Train updated successfully"); });
 
 app.listen(PORT, () => { console.log(Server listening on port ${PORT}); });
+
